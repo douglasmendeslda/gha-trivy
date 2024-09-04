@@ -27,7 +27,16 @@ runs:
     - name: "Run Trivy Scan"
       shell: bash
       run: |
-        trivy image ${{ inputs.image }} --exit-code 0 --format table --output report.json
+        trivy image ${{ inputs.image }} --exit-code 0 --format json -o report.json 
         VULNS_FOUND=$(jq '.Results[].Vulnerabilities | length' report.json | paste -sd+ - | bc)
+        HIGH_VULNS=$(jq '[.Results[].Vulnerabilities[] | select(.Severity == "HIGH")] | length' report.json)
+
         echo "Vulnerabilities found: $VULNS_FOUND"
+        echo "High vulnerabilities found: $HIGH_VULNS"
+
         echo "vulnerabilities_found=$VULNS_FOUND" >> $GITHUB_ENV
+
+        if [ "$HIGH_VULNS" -gt 0 ]; then
+          echo "High vulnerabilities found, failing the scan."
+          exit 1
+        fi
