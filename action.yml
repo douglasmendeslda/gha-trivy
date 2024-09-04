@@ -17,8 +17,12 @@ runs:
     - name: "Download Trivy"
       shell: bash
       run: |
-        wget -qO- https://github.com/aquasecurity/trivy/releases/latest/download/trivy_Linux-64bit.tar.gz | tar zxv
-        sudo mv trivy /usr/local/bin/
+        sudo apt-get install wget apt-transport-https gnupg
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+        echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update
+        sudo apt-get install trivy
+
 
     - name: "Run Trivy Scan"
       shell: bash
