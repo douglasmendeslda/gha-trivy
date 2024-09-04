@@ -1,0 +1,29 @@
+name: "Security Scan"
+description: "Runs trivy to scan vulnerabilities in containers or repositories"
+
+inputs:
+  image:
+    description: "Docker image or directory path to be scanned"
+    required: true
+    default: "."
+
+outputs:
+  vulnerabilities_found:
+    description: "Number of vulnerabilities found"
+
+runs:
+  using: composite
+  steps:
+    - name: "Download Trivy"
+      shell: bash
+      run: |
+        wget -qO- https://github.com/aquasecurity/trivy/releases/latest/download/trivy_Linux-64bit.tar.gz | tar zxv
+        sudo mv trivy /usr/local/bin/
+
+    - name: "Run Trivy Scan"
+      shell: bash
+      run: |
+        trivy image ${{ inputs.image }} --exit-code 0 --format json --output report.json
+        VULNS_FOUND=$(jq '.Results[].Vulnerabilities | length' report.json | paste -sd+ - | bc)
+        echo "Vulnerabilities found: $VULNS_FOUND"
+        echo "vulnerabilities_found=$VULNS_FOUND" >> $GITHUB_ENV
