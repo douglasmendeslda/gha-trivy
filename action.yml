@@ -27,7 +27,8 @@ runs:
     - name: "Run Trivy Scan"
       shell: bash
       run: |
-        trivy image ${{ inputs.image }} --exit-code 0 --format json -o report.json 
+        trivy image ${{ inputs.image }} --exit-code 0 --format table
+        trivy image ${{ inputs.image }} --format json -o report.json 
         VULNS_FOUND=$(jq '.Results[].Vulnerabilities | length' report.json | paste -sd+ - | bc)
         HIGH_VULNS=$(jq '[.Results[].Vulnerabilities[] | select(.Severity == "HIGH")] | length' report.json)
 
